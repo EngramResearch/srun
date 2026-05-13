@@ -34,7 +34,7 @@ After publishing:
 npm install -g @engramresearch/srun
 ```
 
-The npm package installs a prebuilt platform binary when available. Rust/Cargo is only required when building from source.
+The npm package includes prebuilt binaries for supported platforms. Rust/Cargo is only required when building from source.
 
 Or run during development:
 
@@ -143,9 +143,8 @@ Shows detection and resolution phases before printing the command.
 
 Releases are published by GitHub Actions from version tags.
 
-1. Update the version in `package.json`, `Cargo.toml`, and `npm/platforms/*/package.json`.
-2. Ensure root `optionalDependencies` point to the same version.
-3. Run:
+1. Update the version in `package.json` and `Cargo.toml`.
+2. Run:
 
 ```bash
 npm run release:check
@@ -154,14 +153,14 @@ cargo check
 cargo test
 ```
 
-4. Commit, push, and create a tag:
+3. Commit, push, and create a tag:
 
 ```bash
-git tag v0.1.2
-git push origin main v0.1.2
+git tag v0.1.3
+git push origin main v0.1.3
 ```
 
-The workflow publishes platform binary packages first, then the root npm package.
+The workflow builds platform binaries, packages them into the single root npm package, then publishes `@engramresearch/srun`.
 
 Required GitHub secret:
 
@@ -173,7 +172,7 @@ Use an npm automation/granular token that can publish under `@engramresearch` an
 
 ## Current limitations
 
-- Prebuilt npm binaries currently target Windows x64, Linux x64, macOS x64, and macOS arm64.
+- Prebuilt npm binaries currently target Windows x64, Linux x64, and macOS arm64.
 - Monorepo scopes such as `srun dev web` are detected as a future extension but not fully implemented yet.
 - Interactive fallback for custom scripts is not implemented; `srun` reports candidates instead of guessing.
 - Colors and shell integration are intentionally omitted from the MVP.

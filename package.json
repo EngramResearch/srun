@@ -1,6 +1,6 @@
 {
   "name": "@engramresearch/srun",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Universal Smart Project Runner",
   "license": "MIT",
   "bin": {
@@ -13,19 +13,14 @@
     "test": "cargo test",
     "lint": "cargo clippy",
     "format": "cargo fmt",
-    "release:check": "node npm/check-release-packages.js"
+    "release:check": "node npm/check-release.js"
   },
   "files": [
     "npm/srun.js",
+    "npm/bin",
     "README.md",
     "LICENSE"
   ],
-  "optionalDependencies": {
-    "@engramresearch/srun-darwin-arm64": "0.1.2",
-    "@engramresearch/srun-darwin-x64": "0.1.2",
-    "@engramresearch/srun-linux-x64": "0.1.2",
-    "@engramresearch/srun-win32-x64": "0.1.2"
-  },
   "keywords": [
     "cli",
     "runner",

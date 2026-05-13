@@ -1,65 +1,32 @@
 #!/usr/bin/env node
 const { spawnSync } = require("node:child_process");
 const { existsSync } = require("node:fs");
-const { dirname, join, resolve } = require("node:path");
+const { join, resolve } = require("node:path");
 
 const root = resolve(__dirname, "..");
 const binaryName = process.platform === "win32" ? "srun.exe" : "srun";
+const platformKey = `${process.platform}-${process.arch}`;
+const packagedBinary = join(__dirname, "bin", platformKey, binaryName);
+const localDevBinary = join(root, "target", "release", binaryName);
 
-const platformPackages = {
-  "darwin-arm64": "@engramresearch/srun-darwin-arm64",
-  "darwin-x64": "@engramresearch/srun-darwin-x64",
-  "linux-x64": "@engramresearch/srun-linux-x64",
-  "win32-x64": "@engramresearch/srun-win32-x64",
-};
-
-function platformBinary() {
-  const packageName = platformPackages[`${process.platform}-${process.arch}`];
-  if (!packageName) {
-    return undefined;
+function resolveBinary() {
+  if (existsSync(packagedBinary)) {
+    return packagedBinary;
   }
 
-  try {
-    const packageJson = require.resolve(`${packageName}/package.json`);
-    return join(dirname(packageJson), "bin", binaryName);
-  } catch {
-    return undefined;
+  if (existsSync(localDevBinary)) {
+    return localDevBinary;
   }
+
+  return undefined;
 }
 
-function localDevBinary() {
-  const binary = join(root, "target", "release", binaryName);
-  if (existsSync(binary)) {
-    return binary;
-  }
+const binary = resolveBinary();
 
-  if (!existsSync(join(root, "Cargo.toml"))) {
-    return undefined;
-  }
-
-  const result = spawnSync("cargo", ["build", "--release"], {
-    cwd: root,
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  });
-
-  if (result.error) {
-    console.error(`srun: failed to build local Rust binary: ${result.error.message}`);
-    process.exit(1);
-  }
-
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
-  }
-
-  return existsSync(binary) ? binary : undefined;
-}
-
-const binary = platformBinary() ?? localDevBinary();
-
-if (!binary || !existsSync(binary)) {
-  console.error(`srun: no binary package found for ${process.platform}-${process.arch}.`);
-  console.error("srun: install from a supported platform package or build from source with Cargo.");
+if (!binary) {
+  console.error(`srun: no bundled binary found for ${platformKey}.`);
+  console.error("srun: supported npm platforms are win32-x64, linux-x64, and darwin-arm64.");
+  console.error("srun: if you are developing locally, run `cargo build --release` first.");
   process.exit(1);
 }
 

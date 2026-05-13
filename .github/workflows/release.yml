@@ -24,7 +24,7 @@ jobs:
       - run: cargo test
       - run: npm run release:check
 
-  publish-platforms:
+  build-binaries:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
@@ -32,43 +32,35 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            package_dir: npm/platforms/win32-x64
+            platform: win32-x64
             binary: target/release/srun.exe
-            output: npm/platforms/win32-x64/bin/srun.exe
+            name: srun.exe
           - os: ubuntu-latest
-            package_dir: npm/platforms/linux-x64
+            platform: linux-x64
             binary: target/release/srun
-            output: npm/platforms/linux-x64/bin/srun
-          - os: macos-13
-            package_dir: npm/platforms/darwin-x64
-            binary: target/release/srun
-            output: npm/platforms/darwin-x64/bin/srun
+            name: srun
           - os: macos-latest
-            package_dir: npm/platforms/darwin-arm64
+            platform: darwin-arm64
             binary: target/release/srun
-            output: npm/platforms/darwin-arm64/bin/srun
+            name: srun
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
       - run: cargo build --release
-      - name: Copy binary
+      - name: Stage binary
         shell: bash
         run: |
-          mkdir -p "$(dirname '${{ matrix.output }}')"
-          cp "${{ matrix.binary }}" "${{ matrix.output }}"
-      - name: Publish platform package
-        working-directory: ${{ matrix.package_dir }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+          mkdir -p "artifact/${{ matrix.platform }}"
+          cp "${{ matrix.binary }}" "artifact/${{ matrix.platform }}/${{ matrix.name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: srun-${{ matrix.platform }}
+          path: artifact/${{ matrix.platform }}/*
+          if-no-files-found: error
 
-  publish-root:
-    needs: publish-platforms
+  publish:
+    needs: build-binaries
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -77,8 +69,20 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: srun-*
+          path: downloaded
+      - name: Assemble npm package binaries
+        shell: bash
+        run: |
+          mkdir -p npm/bin/win32-x64 npm/bin/linux-x64 npm/bin/darwin-arm64
+          cp downloaded/srun-win32-x64/srun.exe npm/bin/win32-x64/srun.exe
+          cp downloaded/srun-linux-x64/srun npm/bin/linux-x64/srun
+          cp downloaded/srun-darwin-arm64/srun npm/bin/darwin-arm64/srun
+          chmod +x npm/bin/linux-x64/srun npm/bin/darwin-arm64/srun
       - run: npm run release:check
-      - name: Publish root package
+      - name: Publish npm package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
