@@ -160,7 +160,7 @@ git tag v0.1.3
 git push origin main v0.1.3
 ```
 
-The workflow builds platform binaries, packages them into the single root npm package, then publishes `@engramresearch/srun`.
+The workflow builds platform binaries, packages them into the single root npm package, publishes `@engramresearch/srun` to npmjs, then publishes the same package as a GitHub Packages mirror.
 
 Required GitHub secret:
 
@@ -169,6 +169,8 @@ NPM_TOKEN
 ```
 
 Use an npm automation/granular token that can publish under `@engramresearch` and bypass 2FA for CI.
+
+GitHub Packages uses the workflow `GITHUB_TOKEN`; no extra secret is required.
 
 ## Current limitations
 
