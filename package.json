@@ -1,0 +1,39 @@
+{
+  "name": "@engramresearch/srun",
+  "version": "0.1.0",
+  "description": "Universal Smart Project Runner",
+  "license": "MIT",
+  "bin": {
+    "srun": "npm/srun.js"
+  },
+  "scripts": {
+    "postinstall": "node npm/postinstall.js",
+    "build:binary": "cargo build --release",
+    "dev": "cargo run",
+    "build": "cargo build",
+    "test": "cargo test",
+    "lint": "cargo clippy",
+    "format": "cargo fmt"
+  },
+  "files": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "src",
+    "npm",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "cli",
+    "runner",
+    "devtools",
+    "rust",
+    "npm",
+    "pnpm",
+    "electron",
+    "tauri"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
