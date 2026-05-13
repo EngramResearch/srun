@@ -1,0 +1,84 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: cargo fmt -- --check
+      - run: cargo check
+      - run: cargo test
+      - run: npm run release:check
+
+  publish-platforms:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            package_dir: npm/platforms/win32-x64
+            binary: target/release/srun.exe
+            output: npm/platforms/win32-x64/bin/srun.exe
+          - os: ubuntu-latest
+            package_dir: npm/platforms/linux-x64
+            binary: target/release/srun
+            output: npm/platforms/linux-x64/bin/srun
+          - os: macos-13
+            package_dir: npm/platforms/darwin-x64
+            binary: target/release/srun
+            output: npm/platforms/darwin-x64/bin/srun
+          - os: macos-latest
+            package_dir: npm/platforms/darwin-arm64
+            binary: target/release/srun
+            output: npm/platforms/darwin-arm64/bin/srun
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: cargo build --release
+      - name: Copy binary
+        shell: bash
+        run: |
+          mkdir -p "$(dirname '${{ matrix.output }}')"
+          cp "${{ matrix.binary }}" "${{ matrix.output }}"
+      - name: Publish platform package
+        working-directory: ${{ matrix.package_dir }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+  publish-root:
+    needs: publish-platforms
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm run release:check
+      - name: Publish root package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

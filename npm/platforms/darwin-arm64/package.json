@@ -1,0 +1,10 @@
+{
+  "name": "@engramresearch/srun-darwin-arm64",
+  "version": "0.1.2",
+  "description": "macOS arm64 binary for @engramresearch/srun",
+  "license": "MIT",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "files": ["bin/srun"],
+  "preferUnplugged": true
+}
