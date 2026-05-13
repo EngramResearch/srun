@@ -1,13 +1,12 @@
 {
   "name": "@engramresearch/srun",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Universal Smart Project Runner",
   "license": "MIT",
   "bin": {
     "srun": "npm/srun.js"
   },
   "scripts": {
-    "postinstall": "node npm/postinstall.js",
     "build:binary": "cargo build --release",
     "dev": "cargo run",
     "build": "cargo build",

@@ -34,7 +34,7 @@ After publishing:
 npm install -g @engramresearch/srun
 ```
 
-Note: the npm package currently builds the Rust binary during install, so Rust/Cargo must be available on the target machine.
+Note: the npm package currently builds the Rust binary lazily on first run, so Rust/Cargo must be available on the target machine.
 
 Or run during development:
 
