@@ -1,6 +1,6 @@
 {
   "name": "@engramresearch/srun",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Universal Smart Project Runner",
   "license": "MIT",
   "bin": {
@@ -13,7 +13,8 @@
     "test": "cargo test",
     "lint": "cargo clippy",
     "format": "cargo fmt",
-    "release:check": "node npm/check-release.js"
+    "release:check": "node npm/check-release.js",
+    "check": "cargo check"
   },
   "files": [
     "npm/srun.js",

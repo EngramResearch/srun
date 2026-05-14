@@ -1,6 +1,6 @@
 [package]
 name = "srun"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "Universal Smart Project Runner"
 license = "MIT"

@@ -21,9 +21,16 @@ pub enum Command {
     Build(RunArgs),
     Installer(RunArgs),
     Test(RunArgs),
+    #[command(alias = "typecheck", alias = "type-check")]
+    Check(RunArgs),
+    Preview(RunArgs),
+    Clean(RunArgs),
+    #[command(alias = "install", alias = "bootstrap")]
+    Setup(RunArgs),
     Lint(RunArgs),
     Format(RunArgs),
     Info,
+    List,
 }
 
 #[derive(Debug, Args, Clone, Copy)]
@@ -43,10 +50,18 @@ pub fn run(cli: Cli) -> Result<i32, SrunError> {
             print_info(&project);
             Ok(0)
         }
+        Command::List => {
+            print_list(&project);
+            Ok(0)
+        }
         Command::Dev(args) => run_intent(&project, Intent::Dev, args),
         Command::Build(args) => run_intent(&project, Intent::Build, args),
         Command::Installer(args) => run_intent(&project, Intent::Installer, args),
         Command::Test(args) => run_intent(&project, Intent::Test, args),
+        Command::Check(args) => run_intent(&project, Intent::Check, args),
+        Command::Preview(args) => run_intent(&project, Intent::Preview, args),
+        Command::Clean(args) => run_intent(&project, Intent::Clean, args),
+        Command::Setup(args) => run_intent(&project, Intent::Setup, args),
         Command::Lint(args) => run_intent(&project, Intent::Lint, args),
         Command::Format(args) => run_intent(&project, Intent::Format, args),
     }
@@ -103,6 +118,25 @@ pub fn print_info(project: &ProjectInfo) {
     println!("Resolved Commands:");
     for intent in Intent::EXECUTABLE {
         print_resolved_line(project, intent);
+    }
+}
+
+pub fn print_list(project: &ProjectInfo) {
+    println!("Available intents:");
+    for intent in Intent::EXECUTABLE {
+        match resolve_intent(project, intent) {
+            Ok(resolved) => println!("  {:<10} {}", intent.label(), resolved.command.display()),
+            Err(_) => println!("  {:<10} unavailable", intent.label()),
+        }
+    }
+
+    let scripts = project.scripts();
+    if !scripts.is_empty() {
+        println!();
+        println!("Package scripts:");
+        for (name, script) in scripts {
+            println!("  {:<20} {}", name, script);
+        }
     }
 }
 

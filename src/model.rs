@@ -8,16 +8,24 @@ pub enum Intent {
     Build,
     Installer,
     Test,
+    Check,
+    Preview,
+    Clean,
+    Setup,
     Lint,
     Format,
 }
 
 impl Intent {
-    pub const EXECUTABLE: [Intent; 6] = [
+    pub const EXECUTABLE: [Intent; 10] = [
         Intent::Dev,
         Intent::Build,
         Intent::Installer,
         Intent::Test,
+        Intent::Check,
+        Intent::Preview,
+        Intent::Clean,
+        Intent::Setup,
         Intent::Lint,
         Intent::Format,
     ];
@@ -28,6 +36,10 @@ impl Intent {
             Intent::Build => "build",
             Intent::Installer => "installer",
             Intent::Test => "test",
+            Intent::Check => "check",
+            Intent::Preview => "preview",
+            Intent::Clean => "clean",
+            Intent::Setup => "setup",
             Intent::Lint => "lint",
             Intent::Format => "format",
         }

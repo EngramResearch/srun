@@ -117,7 +117,19 @@ pub fn candidates_for(project: &ProjectInfo, intent: Intent) -> Vec<&'static str
             "release",
             "bundle",
         ],
-        Intent::Test => vec!["test", "tests", "check", "ci:test"],
+        Intent::Test => vec!["test", "tests", "test:unit", "test:ci", "ci:test"],
+        Intent::Check => vec![
+            "check",
+            "typecheck",
+            "type-check",
+            "type:check",
+            "tsc",
+            "validate",
+            "verify",
+        ],
+        Intent::Preview => vec!["preview", "serve", "start:prod", "preview:web"],
+        Intent::Clean => vec!["clean", "clean:all", "reset", "clear"],
+        Intent::Setup => vec!["setup", "bootstrap", "install", "deps", "prepare"],
         Intent::Lint => vec!["lint", "lint:check", "eslint", "clippy"],
         Intent::Format => vec!["format", "fmt", "prettier", "format:check"],
     }
@@ -128,9 +140,13 @@ fn resolve_cargo(intent: Intent) -> Result<ResolvedCommand, SrunError> {
         Intent::Dev => CommandSpec::new("cargo", ["run"]),
         Intent::Build => CommandSpec::new("cargo", ["build"]),
         Intent::Test => CommandSpec::new("cargo", ["test"]),
+        Intent::Check => CommandSpec::new("cargo", ["check"]),
         Intent::Lint => CommandSpec::new("cargo", ["clippy"]),
         Intent::Format => CommandSpec::new("cargo", ["fmt"]),
-        Intent::Installer => return Err(resolve_error(intent, ResolveFailure::UnsupportedIntent)),
+        Intent::Clean => CommandSpec::new("cargo", ["clean"]),
+        Intent::Installer | Intent::Preview | Intent::Setup => {
+            return Err(resolve_error(intent, ResolveFailure::UnsupportedIntent));
+        }
     };
 
     Ok(ResolvedCommand {
@@ -250,6 +266,74 @@ mod tests {
         let resolved = resolve_intent(&project, Intent::Dev).expect("resolved");
 
         assert_eq!(resolved.command.display(), "cargo run");
+    }
+
+    #[test]
+    fn resolves_check_script() {
+        let dir = tempdir().expect("tempdir");
+        fs::write(dir.path().join("pnpm-lock.yaml"), "").expect("lock");
+        fs::write(
+            dir.path().join("package.json"),
+            r#"{"scripts":{"check":"tsc --noEmit"}}"#,
+        )
+        .expect("package");
+
+        let project = detect_project(dir.path()).expect("project");
+        let resolved = resolve_intent(&project, Intent::Check).expect("resolved");
+
+        assert_eq!(resolved.command.display(), "pnpm run check");
+    }
+
+    #[test]
+    fn resolves_cargo_check_and_clean() {
+        let dir = tempdir().expect("tempdir");
+        fs::write(
+            dir.path().join("Cargo.toml"),
+            "[package]
+name='x'",
+        )
+        .expect("cargo");
+
+        let project = detect_project(dir.path()).expect("project");
+        let check = resolve_intent(&project, Intent::Check).expect("check");
+        let clean = resolve_intent(&project, Intent::Clean).expect("clean");
+
+        assert_eq!(check.command.display(), "cargo check");
+        assert_eq!(clean.command.display(), "cargo clean");
+    }
+
+    #[test]
+    fn resolves_preview_clean_and_setup_scripts() {
+        let dir = tempdir().expect("tempdir");
+        fs::write(
+            dir.path().join("package.json"),
+            r#"{"scripts":{"preview":"vite preview","clean":"rimraf dist","setup":"pnpm install"}}"#,
+        )
+        .expect("package");
+
+        let project = detect_project(dir.path()).expect("project");
+
+        assert_eq!(
+            resolve_intent(&project, Intent::Preview)
+                .expect("preview")
+                .command
+                .display(),
+            "npm run preview"
+        );
+        assert_eq!(
+            resolve_intent(&project, Intent::Clean)
+                .expect("clean")
+                .command
+                .display(),
+            "npm run clean"
+        );
+        assert_eq!(
+            resolve_intent(&project, Intent::Setup)
+                .expect("setup")
+                .command
+                .display(),
+            "npm run setup"
+        );
     }
 
     #[test]
