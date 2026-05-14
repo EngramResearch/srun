@@ -1,6 +1,14 @@
-# srun
+<p align="center">
+  <img src="https://raw.githubusercontent.com/EngramResearch/srun/main/srun-logo.png" alt="srun logo" width="620">
+</p>
 
-`srun` is a Universal Smart Project Runner. It translates a developer intent into the concrete command for the current project.
+<h1 align="center">srun</h1>
+
+<p align="center">
+  <strong>Universal Smart Project Runner.</strong>
+</p>
+
+`srun` translates a developer intent into the concrete command for the current project.
 
 ```bash
 srun dev
